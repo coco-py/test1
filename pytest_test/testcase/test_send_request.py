@@ -25,42 +25,37 @@ class TestSendRequest:
     # csrf_token=""
     session=requests.session()
 
-
+    ##需要带请求头的接口以及需要cookie关联的接口如何测试
     @pytest.mark.parametrize("caseinfo",YamlUtil().read_testcase_yaml("get_token.yaml"))   #读取测试用例的yaml
-    #需要带请求头的接口以及需要cookie关联的接口如何测试
-    @pytest.mark.run(order=1)
-    @pytest.mark.smoke
+    # @pytest.mark.run(order=1)
+    # @pytest.mark.smoke
     def test_start(self,caseinfo):
-        print(caseinfo)
+        print(caseinfo["name"])
         #发送get请求
-        url="http://47.107.116.139/phpwind/"
-        rep=TestSendRequest.session.request("get",url=url)
+        url=caseinfo["request"]["url"]
+        method=caseinfo["request"]["method"]
+        rep=TestSendRequest.session.request(method,url=url)
         #通过正则表达式获取鉴权码
-        YamlUtil().write_extract_yaml({"csrf_token":re.search('name="csrf_token" value="(.*?)"',rep.text)[1]})        #使用封装方法来进行获取tonken
-        # TestSendRequest.csrf_token=re.search('name="csrf_token" value="(.*?)"',rep.text)[1]
-        # print(TestSendRequest.csrf_token)
-        # assert "url" in rep.json()
+        YamlUtil().write_extract_yaml({"csrf_token":re.search('name="csrf_token" value="(.*?)"',rep.text)[1]})          #使用封装方法来进行获取tonken
 
+    #
+    #
+    # #需要带请求头的接口
 
-    #需要带请求头的接口
-    @pytest.mark.run(order=2)
-    @pytest.mark.smoke
-    def test_login(self,conn_database):
-        csrf_token=YamlUtil().read_extract_yaml("csrf_token")                                                          #使用封装方法来进行获取tonken
-        url="http://47.107.116.139//phpwind/index.php?m=u&c=login&a=dorun"
-        data={
-            "username":"cgf",
-            "password":"123456",
-            "csrf_token":csrf_token,
-            "backurl":"http://47.107.116.139/phpwind/",
-            "invite":""
-        }
-        headers={
-            "Accept":"application/json, text/javascript, /; q=0.01",
-            "X-Requested-With":"XMLHttpRequest"
-        }
+    # @pytest.mark.run(order=2)
+    # @pytest.mark.smoke
+    @pytest.mark.parametrize("caseinfo",YamlUtil().read_testcase_yaml("post_elit.yaml"))
+    def test_login(self,caseinfo):
+        print(caseinfo["name"])
+
+        csrf_token=YamlUtil().read_extract_yaml("csrf_token")
+        #使用封装方法来进行获取tonken
+        method=caseinfo["request"]["method"]
+        url=caseinfo["request"]["url"]
+        data=caseinfo["request"]["data"]
+        headers=caseinfo["request"]["headers"]
         # time.sleep(4)
-        rep=TestSendRequest.session.request("post",url,data=data,headers=headers)
+        rep=TestSendRequest.session.request(method,url,data=data,headers=headers)
         print(rep.json())
         # assert 'state' in 'success'
 
